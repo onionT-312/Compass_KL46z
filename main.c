@@ -175,9 +175,9 @@ void blinkLedGreen(void)
 void initSwitch(void) 
 {
 	SIM->SCGC5 |= (1 << 11);
-	PORTC->PCR[3] = (1 << 8)  | (1 << 0) | (1 << 1);
+	PORTC->PCR[3] = (1 << 8)  | 0x1u | 0x2u;
 	PTC->PDDR &= ~((uint32_t)(1u << 3));
-	PORTC->PCR[3] |= (1 << 17) | (1 << 19);
+	PORTC->PCR[3] |= PORT_PCR_IRQC(0xA);
 	NVIC_ClearPendingIRQ(31);
 	NVIC_EnableIRQ(31);
 }
