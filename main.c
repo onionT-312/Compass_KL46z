@@ -34,6 +34,10 @@ void PORTC_PORTD_IRQHandler();
 void initSwitch(void);
 void Init_Interrupt();
 
+void init_SysTick_interrupt();
+void SysTick_Handler (void);
+void Delay (uint32_t TICK);
+
 bool CurrentState = true;
 
 int main(void)
@@ -157,18 +161,18 @@ void blinkLedRed(void)
 {
 	uint32_t i = 0;
 	PTE -> PCOR = (1<<29);
-	for (i = 0; i < 1000000; i++){}; 
+	Delay(2000); 
 	PTE -> PSOR = (1<<29);
-	for (i = 0; i < 1000000; i++){};	
+	Delay(2000);;	
 }
 
 void blinkLedGreen(void)
 {
 	uint32_t i = 0;
 	PTD -> PCOR = (1<<5);
-	for (i = 0; i < 500000; i++){}; 
+	Delay(1000); 
 	PTD -> PSOR = (1<<5);
-	for (i = 0; i < 500000; i++){};	
+	Delay(1000);;	
 }
 
 
@@ -190,4 +194,19 @@ void PORTC_PORTD_IRQHandler(void)
 			CurrentState = !CurrentState;
 		}	
 		PORTC->PCR[3] |= (PORT_PCR_ISF_MASK);
+}
+
+void init_SysTick_interrupt()
+{
+	SysTick->LOAD = SystemCoreClock / 1000; 
+	SysTick->CTRL = (1 << 0)|(1 << 1)|(1 << 2);
+}
+
+void SysTick_Handler (void) { 
+	msTicks++; 
+}
+
+void Delay (uint32_t TICK) {
+	while (msTicks < TICK); 
+	msTicks = 0; 
 }
