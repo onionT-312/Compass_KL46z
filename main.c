@@ -157,18 +157,18 @@ void blinkLedRed(void)
 {
 	uint32_t i = 0;
 	PTE -> PCOR = (1<<29);
-	for (i = 0; i < 3000000; i++){}; 
+	for (i = 0; i < 1000000; i++){}; 
 	PTE -> PSOR = (1<<29);
-	for (i = 0; i < 3000000; i++){};	
+	for (i = 0; i < 1000000; i++){};	
 }
 
 void blinkLedGreen(void)
 {
 	uint32_t i = 0;
 	PTD -> PCOR = (1<<5);
-	for (i = 0; i < 3000000; i++){}; 
+	for (i = 0; i < 500000; i++){}; 
 	PTD -> PSOR = (1<<5);
-	for (i = 0; i < 3000000; i++){};	
+	for (i = 0; i < 500000; i++){};	
 }
 
 
