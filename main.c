@@ -29,12 +29,9 @@ int32_t volatile msTicks = 0;
 
 void initLed(void);
 void blinkLedRed(void);
-void Init_SW();
+void blinkLedGreen(void);
 void PORTC_PORTD_IRQHandler();
-
-void init_SysTick_interrupt();
-void SysTick_Handler (void);
-void Delay (uint32_t TICK);
+void initSwitch(void);
 void Init_Interrupt();
 
 bool CurrentState = true;
@@ -53,16 +50,11 @@ int main(void)
 
 	PRINTF("Init MAG3110 Complete\n\r");
 
-	void initLed(void);
-	void blinkLedRed(void);
-	void blinkLedGreen(void);
-	void Init_SW();
-
-	void init_SysTick_interrupt();
-	void SysTick_Handler (void);
-	void Delay (uint32_t TICK);
-	void Init_Interrupt();
-	
+	initLed();
+	blinkLedRed();
+	blinkLedGreen();
+	initSwitch(); 
+	PORTC_PORTD_IRQHandler();
 	uint8_t rxBuff[6];
 	
 	initLed();
@@ -99,7 +91,7 @@ int main(void)
 							PTE -> PSOR = (1<<29);
 							blinkLedGreen();
 							LCD_DisplayDemical(atan2(yCalibrated,xCalibrated) * 57.296);
-						} else 
+		} else 
 						{
 							PTD->PSOR = (1 << 5);
 							blinkLedRed();
@@ -152,28 +144,6 @@ void read_i2c(uint8_t device_addr, uint8_t reg_addr, uint8_t *rxBuff, uint32_t r
 	I2C_MasterTransferBlocking(I2C0, &masterXfer);
 }
 
-int16_t calculateHeading(int16_t x, int16_t y) {
-		float x1 = (float) (x + 425) * 0.003077;
-		float y1 = (float) (y - 925) * 0.002985;
-    // Calculate the heading using the atan2 function
-    float heading_rad = atan2f(y1, x1);
-    int16_t heading_deg = (int16_t)(heading_rad * 180.0 / 3.1415);
-
-    // Adjust the heading to ensure it's within the range [0, 360)
-    if (heading_deg < 0) {
-        heading_deg += 360;
-    }
-		if (heading_deg > 360) {
-				heading_deg -= 360;
-		}
-
-    return heading_deg;
-}
-
-void Delay (uint32_t TICK) {
-	while (msTicks < TICK); 
-	msTicks = 0; 
-}
 
 void initLed(void) {
     SIM->SCGC5 |= (1 << 13); 
@@ -183,50 +153,41 @@ void initLed(void) {
 		PTD->PDDR |= (1 << 5);
 }
 
-
 void blinkLedRed(void)
 {
 	uint32_t i = 0;
 	PTE -> PCOR = (1<<29);
-	for (i = 0; i < 2500000; i++){};
+	for (i = 0; i < 3000000; i++){}; 
 	PTE -> PSOR = (1<<29);
-	for (i = 0; i < 2500000; i++){};	
+	for (i = 0; i < 3000000; i++){};	
 }
 
 void blinkLedGreen(void)
 {
 	uint32_t i = 0;
 	PTD -> PCOR = (1<<5);
-	for (i = 0; i < 2500000; i++){}; 
+	for (i = 0; i < 3000000; i++){}; 
 	PTD -> PSOR = (1<<5);
-	for (i = 0; i < 2500000; i++){};	
+	for (i = 0; i < 3000000; i++){};	
 }
 
-void Init_SW()
+
+void initSwitch(void) 
 {
-	 SIM->SCGC5 |= 1 << 11;
-	 PORTC->PCR[3] |= (1 << 8) | 0x1u | 0x2u;
-	 PTC->PDDR &= ((uint32_t)(1 << 3));
-	
+	SIM->SCGC5 |= (1 << 11);
+	PORTC->PCR[3] = (1 << 8)  | (1 << 0) | (1 << 1);
+	PTC->PDDR &= ~((uint32_t)(1u << 3));
+	PORTC->PCR[3] |= (1 << 17) | (1 << 19);
+	NVIC_ClearPendingIRQ(31);
+	NVIC_EnableIRQ(31);
 }
 
-void Init_Interrupt()
-{
-	 PORTC->PCR[3] |= PORT_PCR_IRQC(0xA);
-	 NVIC_ClearPendingIRQ(31);
-	 NVIC_EnableIRQ(31);
-
-}
-
-void PORTC_PORTD_IRQHandler()
-{
-	uint32_t i;
-	for(i = 0 ;i < 3000; i++){
-		if ((PTC->PDIR & (1 << 3)) == 0)
-		{ 
-			PTD->PTOR = 1 << 5;
+void PORTC_PORTD_IRQHandler(void) 
+{ 
+		uint32_t i = 0;
+		for (i = 0; i < 1000; i++);
+		if ((PTC -> PDIR & (1 << 3)) == 0) 	{
 			CurrentState = !CurrentState;
-		}
-	}
-	PORTC->PCR[3] |= PORT_PCR_ISF_MASK;
+		}	
+		PORTC->PCR[3] |= (PORT_PCR_ISF_MASK);
 }
