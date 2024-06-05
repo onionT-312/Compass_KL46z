@@ -4,7 +4,7 @@
 #include "board.h"
 #include "pin_mux.h"
 
-
+// Ham khoi tao LCD
 void LCD_Init(void)
 {
 	slcd_config_t config;
@@ -16,31 +16,32 @@ void LCD_Init(void)
 			false,
 		};
 
-	BOARD_InitPins();
-	BOARD_BootClockRUN();
+	BOARD_InitPins(); // Khoi tao cac chan
+	BOARD_BootClockRUN(); // Khoi dong xung nhip
 
-	SLCD_GetDefaultConfig(&config);
-	config.clkConfig = &clkConfig;
-	config.loadAdjust = kSLCD_HighLoadOrSlowestClkSrc;
-	config.dutyCycle = kSLCD_1Div4DutyCycle;
+	SLCD_GetDefaultConfig(&config); // Lay cau hinh mac dinh
+	config.clkConfig = &clkConfig; // Cau hinh xung nhip
+	config.loadAdjust = kSLCD_HighLoadOrSlowestClkSrc; // Dieu chinh tai
+	config.dutyCycle = kSLCD_1Div4DutyCycle; // Chu ky lam viec
 	config.slcdLowPinEnabled = 0x000e0d80U;	 /* LCD_P19/P18/P17/P11/P10/P8/P7. */
 	config.slcdHighPinEnabled = 0x00300160U; /* LCD_P53/P52/P40/P38/P37. */
 	config.backPlaneLowPin = 0x000c0000U;	 /* LCD_P19/P18 --> b19/b18. */
 	config.backPlaneHighPin = 0x00100100U;	 /* LCD_P52/P40 --> b20/b8. */
 	config.faultConfig = NULL;
-	/* SLCD Initialize. */
+	/* Khoi tao SLCD. */
 	SLCD_Init(LCD, &config);
 }
 
+// Ham hien thi tat ca cac so tren LCD
 void LCD_DisplayAll(void)
 {
-	/* Set SLCD back plane phase. */
+	/* Cai dat giai doan mat phang phia sau SLCD. */
 	SLCD_SetBackPlanePhase(LCD, 40, kSLCD_PhaseAActivate); /* SLCD COM1 --- LCD_P40. */
 	SLCD_SetBackPlanePhase(LCD, 52, kSLCD_PhaseAActivate); /* SLCD COM2 --- LCD_P52. */
 	SLCD_SetBackPlanePhase(LCD, 19, kSLCD_PhaseAActivate); /* SLCD COM3 --- LCD_P19. */
 	SLCD_SetBackPlanePhase(LCD, 18, kSLCD_PhaseAActivate); /* SLCD COM4 --- LCD_P18. */
 
-	/* Set SLCD front plane phase to show. */
+	/* Cai dat giai doan mat phang phia truoc SLCD de hien thi. */
 	SLCD_SetFrontPlaneSegments(LCD, 37, kSLCD_PhaseAActivate); /* SLCD P05 --- LCD_P37. */
 	SLCD_SetFrontPlaneSegments(LCD, 17, kSLCD_PhaseAActivate); /* SLCD P06 --- LCD_P17. */
 	SLCD_SetFrontPlaneSegments(LCD, 7, kSLCD_PhaseAActivate);  /* SLCD P07 --- LCD_P7. */
@@ -50,10 +51,11 @@ void LCD_DisplayAll(void)
 	SLCD_SetFrontPlaneSegments(LCD, 10, kSLCD_PhaseAActivate); /* SLCD P11 --- LCD_P10. */
 	SLCD_SetFrontPlaneSegments(LCD, 11, kSLCD_PhaseAActivate); /* SLCD P12 --- LCD_P11. */
 
-	SLCD_StartDisplay(LCD);
+	SLCD_StartDisplay(LCD); // Bat dau hien thi SLCD
 }
 
-void LCD_SetNum(uint8_t dig, uint8_t num, bool isShowZero,bool isShowDot)
+// Ham hien thi mot so cu the tren mot vi tri cu the tren LCD
+void LCD_SetNum(uint8_t dig, uint8_t num, bool isShowZero, bool isShowDot)
 {
 	uint32_t pin1, pin2;
 	switch (dig)
@@ -75,8 +77,8 @@ void LCD_SetNum(uint8_t dig, uint8_t num, bool isShowZero,bool isShowDot)
 		pin2 = 11;
 		break;
 	}
-	
-	uint8_t pin1Phase,pin2Phase;
+
+	uint8_t pin1Phase, pin2Phase;
 
 	switch (num)
 	{
@@ -129,17 +131,18 @@ void LCD_SetNum(uint8_t dig, uint8_t num, bool isShowZero,bool isShowDot)
 		}
 		break;
 	}
-	if(isShowDot) pin2Phase |= kSLCD_PhaseAActivate;
-	
-	SLCD_SetFrontPlaneSegments(LCD, pin1, pin1Phase); 
+	if (isShowDot) pin2Phase |= kSLCD_PhaseAActivate;
+
+	SLCD_SetFrontPlaneSegments(LCD, pin1, pin1Phase);
 	SLCD_SetFrontPlaneSegments(LCD, pin2, pin2Phase);
 }
 
+// Ham hien thi gia tri thap phan len LCD
 void LCD_DisplayDemical(uint16_t val)
 {
-	if(val > 9999)
+	if (val > 9999)
 	{
-		LCD_DisplayError();
+		LCD_DisplayError(); // Hien thi loi neu gia tri qua lon
 		return;
 	}
 
@@ -153,13 +156,15 @@ void LCD_DisplayDemical(uint16_t val)
 	uint8_t seg3 = (val - (val / 100) * 100) / 10;
 	uint8_t seg4 = val - (val / 10) * 10;
 
-	LCD_SetNum(1, seg1, false,false);
-	LCD_SetNum(2, seg2, seg1 > 0,false);
-	LCD_SetNum(3, seg3, seg1 > 0 || seg2 > 0,false);
-	LCD_SetNum(4, seg4, true,false);
+	LCD_SetNum(1, seg1, false, false);
+	LCD_SetNum(2, seg2, seg1 > 0, false);
+	LCD_SetNum(3, seg3, seg1 > 0 || seg2 > 0, false);
+	LCD_SetNum(4, seg4, true, false);
 
-	SLCD_StartDisplay(LCD);
+	SLCD_StartDisplay(LCD); // Bat dau hien thi
 }
+
+// Ham hien thi loi len LCD
 
 void LCD_DisplayError(){
 	SLCD_SetBackPlanePhase(LCD, 40, kSLCD_PhaseAActivate);

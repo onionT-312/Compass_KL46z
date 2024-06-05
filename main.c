@@ -48,7 +48,7 @@ int main(void)
 
 	SIM->SCGC5 |= 0x1000U;
 	PORTD->PCR[1] = PORT_PCR_MUX(1);
-	PTD->PDDR &= ~(1 << 1);
+	PTD->PDDR &= ~(1 << 1); // set input nhan interrup mag3110
 	
 	LCD_Init();
 
@@ -65,14 +65,16 @@ int main(void)
 	
 	while (1)
 	{
-		if((PTD->PDIR & (1<<1)) == 0) continue;
+		if((PTD->PDIR & (1<<1)) == 0) //interup MAG3110
+		{
+			 continue; //
+		}
 		
-		read_i2c(MAG3110_I2C_ADDR, 1, inARR, 6);
+		read_i2c(MAG3110_I2C_ADDR, 1, inARR, 6); // read until all over
 		int16_t x = ((int16_t)((inARR[0] * 256U) | inARR[1]));
 		int16_t y = ((int16_t)((inARR[2] * 256U) | inARR[3]));
 		int16_t z = ((int16_t)((inARR[4] * 256U) | inARR[5]));
 
-		PRINTF("status_reg = 0x%x , x = %5d , y = %5d , z = %5d\r\n", PTD->PDIR & (1<<1), x, y, z);
 		
 		if (x > xmax) xmax = x;
     if (x < xmin) xmin = x;
@@ -82,8 +84,8 @@ int main(void)
     
     xOffset = (xmax + xmin) / 2.0;
     yOffset = (ymax + ymin) / 2.0;
-    xScale = 2.0 / (xmax - xmin);
-    yScale = 2.0 / (ymax - ymin);
+    xScale = 2.0 / (xmax - xmin); 
+    yScale = 2.0 / (ymax - ymin); 
 
     
     float xCalibrated = (x - xOffset) * xScale;
@@ -91,20 +93,22 @@ int main(void)
 		
 
 		if (CurrentState == true)
-						{
-							PTE -> PSOR = (1<<29);
-							blinkLedGreen();
-							LCD_DisplayDemical(atan2(yCalibrated,xCalibrated) * 57.296);
-		} else 
-						{
-							PTD->PSOR = (1 << 5);
-							blinkLedRed();
-							LCD_DisplayDemical(0);
-						}
+		{
+			PTE -> PSOR = (1<<29);
+			blinkLedGreen();
+			LCD_DisplayDemical(atan2(yCalibrated,xCalibrated) * 57.296);
+		} 
+		else 
+		{
+			PTD->PSOR = (1 << 5);
+			blinkLedRed();
+			LCD_DisplayDemical(0);
+		}
 		delay(3000000);
 	}
 }
 
+// Kh?i t?o I2C
 void init_i2c()
 {
 	i2c_master_config_t masterConfig;
@@ -118,6 +122,7 @@ void init_i2c()
 	I2C_MasterInit(I2C0, &masterConfig, CLOCK_GetFreq(I2C0_CLK_SRC));
 }
 
+// G?i d? li?u qua I2C
 void send_i2c(uint8_t device_addr, uint8_t reg_addr, uint8_t value)
 {
 	i2c_master_transfer_t masterXfer;
@@ -133,6 +138,7 @@ void send_i2c(uint8_t device_addr, uint8_t reg_addr, uint8_t value)
 	I2C_MasterTransferBlocking(I2C0, &masterXfer);
 }
 
+// Ð?c d? li?u t? I2C
 void read_i2c(uint8_t device_addr, uint8_t reg_addr, uint8_t *rxBuff, uint32_t rxSize)
 {
 	i2c_master_transfer_t masterXfer;
@@ -147,7 +153,6 @@ void read_i2c(uint8_t device_addr, uint8_t reg_addr, uint8_t *rxBuff, uint32_t r
 
 	I2C_MasterTransferBlocking(I2C0, &masterXfer);
 }
-
 
 void initLed(void) {
     SIM->SCGC5 |= (1 << 13); 
@@ -198,7 +203,7 @@ void PORTC_PORTD_IRQHandler(void)
 
 void init_SysTick_interrupt()
 {
-	SysTick->LOAD = SystemCoreClock / 1000; 
+	SysTick->LOAD = SystemCoreClock / 1000 - 1; 
 	SysTick->CTRL = (1 << 0)|(1 << 1)|(1 << 2);
 }
 
